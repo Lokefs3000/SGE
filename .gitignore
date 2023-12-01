@@ -1,0 +1,6 @@
+.vscode
+.vs
+core/x64
+appc/x64
+glad/x64
+res-embed/obj
