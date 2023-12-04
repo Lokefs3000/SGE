@@ -10,6 +10,8 @@ class Renderer;
 class LuaHandler;
 class RenderResources;
 class DebugDrawer;
+class SGELoader;
+class TimeHandler;
 
 class Engine {
 private:
@@ -19,6 +21,8 @@ private:
 	std::unique_ptr<LuaHandler> m_LuaHandler;
 	std::unique_ptr<RenderResources> m_RenderResources;
 	std::unique_ptr<DebugDrawer> m_DebugDrawer;
+	std::unique_ptr<SGELoader> m_SGELoader;
+	std::unique_ptr<TimeHandler> m_TimeHandler;
 public:
 	SGE Engine(int argc, char* argv[]);
 	SGE ~Engine();

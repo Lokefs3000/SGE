@@ -1,0 +1,1 @@
+@call res-embed\bin\Debug\res-embed.exe core\res core\resdata

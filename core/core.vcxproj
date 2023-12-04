@@ -251,8 +251,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ArialFont.h" />
-    <ClInclude Include="CommandList.h" />
-    <ClInclude Include="Commands.h" />
     <ClInclude Include="DebugDrawer.h" />
     <ClInclude Include="DebugLogger.h" />
     <ClInclude Include="Engine.h" />
@@ -264,13 +262,17 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderResources.h" />
     <ClInclude Include="resdata\res_credits_txt.h" />
+    <ClInclude Include="resdata\res_lua_boot_lua.h" />
+    <ClInclude Include="resdata\res_shaders_2d_rect_frag.h" />
+    <ClInclude Include="resdata\res_shaders_2d_rect_vert.h" />
     <ClInclude Include="resdata\res_shaders_debug_font_frag.h" />
     <ClInclude Include="resdata\res_shaders_debug_font_vert.h" />
+    <ClInclude Include="SGELoader.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="TimeHandler.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CommandList.cpp" />
     <ClCompile Include="DebugDrawer.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -286,7 +288,9 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderResources.cpp" />
+    <ClCompile Include="SGELoader.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="TimeHandler.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

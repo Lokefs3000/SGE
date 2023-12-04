@@ -1,55 +1,43 @@
 #include "pch.h"
 #include "Renderer.h"
 
+#include <algorithm>
+
 #include <sdl3/SDL.h>
 #include <glad/gl.h>
+#include <glm/gtc/matrix_transform.hpp>
 
-#include "CommandList.h"
-#include "Commands.h"
 #include "RenderResources.h"
 #include "Shader.h"
+#include "SGELoader.h"
 
 #include "exports.h"
 
-void Renderer::clearCmd(Command* cmd)
+#include "resdata/res_shaders_2d_rect_vert.h"
+#include "resdata/res_shaders_2d_rect_frag.h"
+
+RenderMode& Renderer::switchRenderMode(uint8_t id)
 {
-	CmdClear* cCmd = (CmdClear*)cmd;
+	RenderMode mode;
 
-	glClearColor(cCmd->r, cCmd->g, cCmd->b, cCmd->a);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
+	if (m_Chunks.size() == 0 || m_Chunks[m_Chunks.size() - 1]->size + 6 >= RENDER_VERTEX_SIZE) {
+		m_Chunks.push_back(std::make_unique<RenderChunk>());
 
-void Renderer::canvasCmd(Command* cmd)
-{
-	CmdCanvas* cCmd = (CmdCanvas*)cmd;
-
-	if (cCmd->canvas == DEAD_GUID) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		return;
+		mode.id = id;
+		mode.begin = m_Chunks[m_Chunks.size() - 1]->size;
+		mode.chunk = m_Chunks.size() - 1;
+		mode.end = 0;
+		m_Modes.push_back(mode);
+	}
+	else if (m_Modes.size() == 0 || m_Modes[m_Modes.size() - 1].id != id) {
+		mode.id = id;
+		mode.begin = m_Chunks[m_Chunks.size() - 1]->size;
+		mode.chunk = m_Chunks.size() - 1;
+		mode.end = 0;
+		m_Modes.push_back(mode);
 	}
 
-	RenderCanvasResource* canvas = m_Resources->getCanvas(cCmd->canvas);
-	if (canvas == nullptr)
-		return;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, canvas->fbo);
-}
-
-void Renderer::shaderCmd(Command* cmd)
-{
-	CmdShader* cCmd = (CmdShader*)cmd;
-
-	if (cCmd->canvas == m_LastShader || cCmd->canvas == DEAD_GUID) {
-		return;
-	}
-
-	m_LastShader = cCmd->canvas;
-
-	RenderShaderResource* shader = m_Resources->getShader(cCmd->canvas);
-	if (shader == nullptr)
-		return;
-
-	shader->shader->Bind();
+	return m_Modes[m_Modes.size() - 1];
 }
 
 Renderer::Renderer(SDL_Window* window, RenderResources* res)
@@ -61,49 +49,108 @@ Renderer::Renderer(SDL_Window* window, RenderResources* res)
 	m_OpenGL = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, m_OpenGL);
 	gladLoadGL(SDL_GL_GetProcAddress);
+	SDL_GL_SetSwapInterval(0);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	m_DrawFunctions[0] = EVENT_HANDLER_BIND1(Renderer::clearCmd, this);
-	m_DrawFunctions[1] = EVENT_HANDLER_BIND1(Renderer::canvasCmd, this);
-	m_DrawFunctions[2] = EVENT_HANDLER_BIND1(Renderer::shaderCmd, this);
+	glGenVertexArrays(1, &m_VertexArray);
+	glGenBuffers(1, &m_VertexBuffer);
 
-	m_CommandList = std::make_unique<CommandList>();
+	glBindVertexArray(m_VertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(RenderVertex) * RENDER_VERTEX_SIZE, NULL, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(RenderVertex), (void*)0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(RenderVertex), (void*)offsetof(RenderVertex, color));
+
+	m_Shaders.RectShader = std::make_unique<Shader>(res_shaders_2d_rect_vert, res_shaders_2d_rect_frag);
+
+	m_2DProjection = glm::ortho(-400.0f, 400.0f, 300.0f, -300.0f, -1.0f, 1.0f);
+
+	m_Shaders.RectShader->Bind();
+	m_Shaders.RectShader->SetMat4("uProjection", m_2DProjection);
+
 	m_Resources = res;
-}
-
-CommandList* Renderer::getCmds()
-{
-	return m_CommandList.get();
 }
 
 Renderer::~Renderer()
 {
+	glDeleteVertexArrays(1, &m_VertexArray);
+	glDeleteBuffers(1, &m_VertexBuffer);
+
+	m_Shaders.RectShader.reset();
+
 	SDL_GL_DeleteContext(m_OpenGL);
 }
 
-CommandList* Renderer::beginCmd()
+void Renderer::clear(glm::vec4 color)
 {
-	return m_CommandList.get();
+	glClearColor(color.x, color.y, color.z, color.w);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Renderer::drawCmd()
+void Renderer::drawRect(glm::vec4 color, int x, int y, int w, int h)
 {
-	m_CommandList->canvas(DEAD_GUID);
-	m_CommandList->clear(0.0f, 0.0f, 0.0f, 1.0f);
+	RenderMode& mode = switchRenderMode(0);
+	RenderChunk* chunk = m_Chunks[m_Chunks.size() - 1].get();
 
-	auto& cmds = m_CommandList->retriveCmd();
+	mode.shader = m_Shaders.RectShader.get();
+	mode.shaderUse = true;
 
-	for (size_t i = 0; i < cmds.size(); i++)
+	chunk->vertices[chunk->size] = { glm::vec4(x, y + h, 0.0f, 0.0f), color };
+	chunk->vertices[chunk->size + 1] = { glm::vec4(x, y, 0.0f, 1.0f), color };
+	chunk->vertices[chunk->size + 2] = { glm::vec4(x + w, y, 1.0f, 1.0f), color };
+
+	chunk->vertices[chunk->size + 3] = { glm::vec4(x, y + h, 0.0f, 0.0f), color };
+	chunk->vertices[chunk->size + 4] = { glm::vec4(x + w, y, 1.0f, 1.0f), color };
+	chunk->vertices[chunk->size + 5] = { glm::vec4(x + w, y + h, 1.0f, 0.0f), color };
+
+	mode.end += 6;
+	chunk->size += 6;
+}
+
+void Renderer::draw()
+{
+	glBindVertexArray(m_VertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
+	
+	uint32_t lastId = UINT32_MAX;
+	for (size_t i = 0; i < m_Modes.size(); i++)
 	{
-		m_DrawFunctions[cmds[i]->FuncIdx](cmds[i].get());
+		RenderMode& mode = m_Modes[i];
+		RenderChunk& chunk = *m_Chunks[mode.chunk].get();
+
+		if (lastId != mode.chunk) {
+			void* mem = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+			memcpy(mem, chunk.vertices, chunk.size * sizeof(RenderVertex));
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			lastId = mode.chunk;
+		}
+
+		if (mode.shaderUse) {
+			if (m_LastShader != mode.shader && mode.shader != NULL) {
+				m_LastShader = mode.shader;
+				mode.shader->Bind();
+			}
+		}
+
+		if (mode.textureUse) {
+			if (m_LastTexture != mode.texture && mode.texture != 0) {
+				m_LastTexture = mode.texture;
+				glBindTexture(GL_TEXTURE_2D, mode.texture);
+			}
+		}
+
+		glDrawArrays(GL_TRIANGLES, mode.begin, mode.end);
 	}
 
-	cmds.clear();
-}
-
-void Renderer::flushCmd()
-{
-	m_CommandList = std::make_unique<CommandList>();
+	m_Chunks.clear();
+	m_Modes.clear();
+	lastId = UINT32_MAX;
+	m_LastShader = nullptr;
 }

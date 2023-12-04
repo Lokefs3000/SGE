@@ -43,6 +43,27 @@
     <Filter Include="Header Files\resdata">
       <UniqueIdentifier>{e426f9dc-ce5a-43c6-979e-5fd9f9f1870b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\data">
+      <UniqueIdentifier>{78766c52-78f0-45b1-900c-1fbb7a70e307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\debug">
+      <UniqueIdentifier>{92485640-7ded-4045-9932-884862948342}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\event">
+      <UniqueIdentifier>{10fb876e-00d6-4a08-955c-b13c2eaa3f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics">
+      <UniqueIdentifier>{a3e20b6e-5213-4de8-94bb-93fbf5391d86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\input">
+      <UniqueIdentifier>{6fd98dc3-fdb8-4160-82bc-c56df3d2cb81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lua">
+      <UniqueIdentifier>{edaddd9b-6dab-465b-80ee-14cc8cabfa47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\screen">
+      <UniqueIdentifier>{58b9927e-5091-461c-9f00-66bbcf7b29cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -69,12 +90,6 @@
     <ClInclude Include="Renderer.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="CommandList.h">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Commands.h">
-      <Filter>Header Files\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="LuaHandler.h">
       <Filter>Header Files\lua</Filter>
     </ClInclude>
@@ -99,6 +114,21 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="SGELoader.h">
+      <Filter>Header Files\data</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeHandler.h">
+      <Filter>Header Files\data</Filter>
+    </ClInclude>
+    <ClInclude Include="resdata\res_lua_boot_lua.h">
+      <Filter>Header Files\resdata</Filter>
+    </ClInclude>
+    <ClInclude Include="resdata\res_shaders_2d_rect_frag.h">
+      <Filter>Header Files\resdata</Filter>
+    </ClInclude>
+    <ClInclude Include="resdata\res_shaders_2d_rect_vert.h">
+      <Filter>Header Files\resdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -107,31 +137,34 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="DebugDrawer.cpp">
+      <Filter>Source Files\debug</Filter>
     </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Source Files\app</Filter>
     </ClCompile>
     <ClCompile Include="EventHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CommandList.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\event</Filter>
     </ClCompile>
     <ClCompile Include="LuaHandler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\lua</Filter>
     </ClCompile>
-    <ClCompile Include="RenderResources.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="DebugDrawer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SGELoader.cpp">
+      <Filter>Source Files\data</Filter>
     </ClCompile>
     <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>Source Files\screen</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderResources.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

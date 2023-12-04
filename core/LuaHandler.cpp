@@ -19,8 +19,9 @@ extern "C" {
 #include "Renderer.h"
 #include "RenderResources.h"
 #include "DebugLogger.h"
-#include "CommandList.h"
 #include "DebugDrawer.h"
+#include "SGELoader.h"
+#include "TimeHandler.h"
 
 #include "resdata/res_lua_boot_lua.h"
 
@@ -28,8 +29,10 @@ extern "C" {
 static Window* s_Window = NULL;
 static Renderer* s_Renderer = NULL;
 static RenderResources* s_RenderResources = NULL;
-static CommandList* s_CommandList = NULL;
 static DebugDrawer* s_DebugDrawer = NULL;
+static SGELoader* s_SGELoader = NULL;
+static TimeHandler* s_TimeHandler = NULL;
+static std::string s_DefPath = "";
 #pragma endregion
 
 #pragma region FunctionInitials
@@ -39,9 +42,9 @@ static int Window_setTitle(lua_State* state);
 static int Window_setWidth(lua_State* state);
 static int Window_setHeight(lua_State* state);
 
-static int Renderer_beginCmd(lua_State* state);
-static int Renderer_drawCmd(lua_State* state);
-static int Renderer_flushCmd(lua_State* state);
+static int Renderer_clear(lua_State* state);
+static int Renderer_drawRect(lua_State* state);
+static int Renderer_draw(lua_State* state);
 
 static int RenderResources_createCanvas(lua_State* state);
 static int RenderResources_deleteCanvas(lua_State* state);
@@ -49,22 +52,69 @@ static int RenderResources_getCanvas(lua_State* state);
 static int RenderResources_createShader(lua_State* state);
 static int RenderResources_deleteShader(lua_State* state);
 static int RenderResources_getShader(lua_State* state);
-
-static int CommandList_clear(lua_State* state);
-static int CommandList_canvas(lua_State* state);
+static int RenderResources_createTexture(lua_State* state);
+static int RenderResources_deleteTexture(lua_State* state);
+static int RenderResources_getTexture(lua_State* state);
 
 static int DebugDrawer_text(lua_State* state);
+
+static int SGELoader_createSGE(lua_State* state);
+static int SGELoader_deleteSGE(lua_State* state);
+
+static int TimeHandler_retimeDelta(lua_State* state);
+static int TimeHandler_delta(lua_State* state);
 #pragma endregion
+
+#pragma region MetaTableInitials
+static int vec4reg_gc(lua_State* state);
+static int vec4reg_index(lua_State* state);
+static int vec4reg_newindex(lua_State* state);
+static int vec4reg_new(lua_State* state);
+#pragma endregion
+
+#pragma region MetaTableData
+static const struct luaL_Reg vec4_meta[] = {
+	{"__gc", vec4reg_gc},
+	{"__index", vec4reg_index},
+	{"__newindex", vec4reg_newindex},
+	{NULL, NULL}
+};
+
+static const struct luaL_Reg vec4_method[] = {
+	{"new", vec4reg_new},
+	{NULL, NULL}
+};
+#pragma endregion
+
+void LuaHandler::registerMetaTables()
+{
+	int lib_id, meta_id;
+	
+	lua_createtable(m_State, 0, 0);
+	lib_id = lua_gettop(m_State);
+	luaL_newmetatable(m_State, "Vector4");
+	meta_id = lua_gettop(m_State);
+	luaL_setfuncs(m_State, vec4_meta, 0);
+	luaL_newlib(m_State, vec4_method);
+	lua_setfield(m_State, meta_id, "__index");
+	luaL_newlib(m_State, vec4_meta);
+	lua_setfield(m_State, meta_id, "__metatable");
+	lua_setmetatable(m_State, lib_id);
+	lua_setglobal(m_State, "Vector4");
+}
 
 LuaHandler::LuaHandler(const char* def)
 {
 	m_State = luaL_newstate();
 	luaL_openlibs(m_State);
 
+	registerMetaTables();
+
 	lua_newtable(m_State);
 
 	lua_pushstring(m_State, def);
 	lua_setfield(m_State, -2, "def");
+	s_DefPath = def;
 }
 
 LuaHandler::~LuaHandler()
@@ -94,12 +144,12 @@ void LuaHandler::bindRenderer(Renderer* renderer)
 
 	lua_newtable(m_State);
 
-	lua_pushcfunction(m_State, Renderer_beginCmd);
-	lua_setfield(m_State, -2, "beginCmd");
-	lua_pushcfunction(m_State, Renderer_drawCmd);
-	lua_setfield(m_State, -2, "drawCmd");
-	lua_pushcfunction(m_State, Renderer_flushCmd);
-	lua_setfield(m_State, -2, "flushCmd");
+	lua_pushcfunction(m_State, Renderer_clear);
+	lua_setfield(m_State, -2, "clear");
+	lua_pushcfunction(m_State, Renderer_drawRect);
+	lua_setfield(m_State, -2, "drawRect");
+	lua_pushcfunction(m_State, Renderer_draw);
+	lua_setfield(m_State, -2, "draw");
 
 	lua_setfield(m_State, -2, "renderer");
 }
@@ -124,21 +174,14 @@ void LuaHandler::bindRenderResources(RenderResources* rres)
 	lua_pushcfunction(m_State, RenderResources_getShader);
 	lua_setfield(m_State, -2, "getShader");
 
+	lua_pushcfunction(m_State, RenderResources_createTexture);
+	lua_setfield(m_State, -2, "createTexture");
+	lua_pushcfunction(m_State, RenderResources_deleteTexture);
+	lua_setfield(m_State, -2, "deleteTexture");
+	lua_pushcfunction(m_State, RenderResources_getTexture);
+	lua_setfield(m_State, -2, "getTexture");
+
 	lua_setfield(m_State, -2, "resources");
-}
-
-void LuaHandler::bindCommandList(CommandList* cmds)
-{
-	s_CommandList = cmds;
-
-	lua_newtable(m_State);
-
-	lua_pushcfunction(m_State, CommandList_clear);
-	lua_setfield(m_State, -2, "clear");
-	lua_pushcfunction(m_State, CommandList_canvas);
-	lua_setfield(m_State, -2, "canvas");
-
-	lua_setfield(m_State, -2, "commands");
 }
 
 void LuaHandler::bindDebugDrawer(DebugDrawer* ddraw)
@@ -151,6 +194,34 @@ void LuaHandler::bindDebugDrawer(DebugDrawer* ddraw)
 	lua_setfield(m_State, -2, "text");
 
 	lua_setfield(m_State, -2, "debug");
+}
+
+void LuaHandler::bindSGELoader(SGELoader* loader)
+{
+	s_SGELoader = loader;
+
+	lua_newtable(m_State);
+
+	lua_pushcfunction(m_State, SGELoader_createSGE);
+	lua_setfield(m_State, -2, "createSGE");
+	lua_pushcfunction(m_State, SGELoader_deleteSGE);
+	lua_setfield(m_State, -2, "deleteSGE");
+
+	lua_setfield(m_State, -2, "loader");
+}
+
+void LuaHandler::bindTimeHandler(TimeHandler* time)
+{
+	s_TimeHandler = time;
+
+	lua_newtable(m_State);
+
+	lua_pushcfunction(m_State, TimeHandler_retimeDelta);
+	lua_setfield(m_State, -2, "retimeDelta");
+	lua_pushcfunction(m_State, TimeHandler_delta);
+	lua_setfield(m_State, -2, "delta");
+
+	lua_setfield(m_State, -2, "time");
 }
 
 void LuaHandler::bindGlobal()
@@ -196,6 +267,36 @@ void LuaHandler::call(const char* func)
 		std::cout << func << " is not a global lua function!" << std::endl;
 }
 
+#pragma region MetaTableBindings
+int vec4reg_gc(lua_State* state)
+{
+	return 0;
+}
+
+int vec4reg_index(lua_State* state)
+{
+	return 0;
+}
+
+int vec4reg_newindex(lua_State* state)
+{
+	return 0;
+}
+
+int vec4reg_new(lua_State* state)
+{
+	double x = luaL_checknumber(state, 1);
+	double y = luaL_checknumber(state, 2);
+	double z = luaL_checknumber(state, 3);
+	double w = luaL_checknumber(state, 4);
+	glm::vec4& v4 = *(glm::vec4*)lua_newuserdata(state, sizeof(glm::vec4));
+	v4.x = x; v4.y = y; v4.z = z; v4.w = w;
+	luaL_getmetatable(state, "Vector4");
+	lua_setmetatable(state, -2);
+	return 1;
+}
+#pragma endregion
+
 #pragma region FunctionBindings
 int LuaHandler_defaultEmpty(lua_State* state)
 {
@@ -226,25 +327,30 @@ int Window_setHeight(lua_State* state)
 	return 0;
 }
 
-int Renderer_beginCmd(lua_State* state)
+int Renderer_clear(lua_State* state)
 {
 	ASSERT(s_Renderer != NULL, "s_Renderer is nullptr!", 0);
-	CommandList* cmd = s_Renderer->beginCmd();
-	lua_pushlightuserdata(state, cmd);
-	return 1;
-}
-
-int Renderer_drawCmd(lua_State* state)
-{
-	ASSERT(s_Renderer != NULL, "s_Renderer is nullptr!", 0);
-	s_Renderer->drawCmd();
+	glm::vec4& color = *(glm::vec4*)luaL_checkudata(state, 1, "Vector4");
+	s_Renderer->clear(color);
 	return 0;
 }
 
-int Renderer_flushCmd(lua_State* state)
+int Renderer_drawRect(lua_State* state)
 {
 	ASSERT(s_Renderer != NULL, "s_Renderer is nullptr!", 0);
-	s_Renderer->flushCmd();
+	glm::vec4& color = *(glm::vec4*)luaL_checkudata(state, 1, "Vector4");
+	lua_Integer x = luaL_checkinteger(state, 2);
+	lua_Integer y = luaL_checkinteger(state, 3);
+	lua_Integer w = luaL_checkinteger(state, 4);
+	lua_Integer h = luaL_checkinteger(state, 5);
+	s_Renderer->drawRect(color, x, y, w, h);
+	return 0;
+}
+
+int Renderer_draw(lua_State* state)
+{
+	ASSERT(s_Renderer != NULL, "s_Renderer is nullptr!", 0);
+	s_Renderer->draw();
 	return 0;
 }
 
@@ -308,23 +414,33 @@ int RenderResources_getShader(lua_State* state)
 	return 0;
 }
 
-int CommandList_clear(lua_State* state)
+int RenderResources_createTexture(lua_State* state)
 {
-	ASSERT(s_CommandList != NULL, "s_CommandList is nullptr!", 0);
-	double r = luaL_checknumber(state, 1);
-	double g = luaL_checknumber(state, 2);
-	double b = luaL_checknumber(state, 3);
-	double a = luaL_checknumber(state, 4);
-	s_CommandList->clear(r, g, b, a);
+	ASSERT(s_RenderResources != NULL, "s_RenderResources is nullptr!", 0);
+	const char* path = luaL_checkstring(state, 1);
+	std::string spath = s_DefPath + path;
+	xg::Guid& guid = s_RenderResources->createTexture(spath.c_str());
+	lua_pushlightuserdata(state, &guid);
+	return 1;
+}
+
+int RenderResources_deleteTexture(lua_State* state)
+{
+	ASSERT(s_RenderResources != NULL, "s_RenderResources is nullptr!", 0);
+	if (!lua_islightuserdata(state, 1))
+		return 0;
+	void* guid = lua_touserdata(state, 1);
+	s_RenderResources->deleteTexture(*(xg::Guid*)guid);
 	return 0;
 }
 
-int CommandList_canvas(lua_State* state)
+int RenderResources_getTexture(lua_State* state)
 {
-	ASSERT(s_CommandList != NULL, "s_CommandList is nullptr!", 0);
-	ASSERT(lua_islightuserdata(state, 1), "RenderResources_getCanvas did not recieve lightuserdata!", 0);
+	ASSERT(s_RenderResources != NULL, "s_RenderResources is nullptr!", 0);
+	ASSERT(lua_islightuserdata(state, 1), "RenderResources_getShader did not recieve lightuserdata!", 0);
 	void* guid = lua_touserdata(state, 1);
-	s_CommandList->canvas(*(xg::Guid*)guid);
+	RenderTextureResource* res = s_RenderResources->getTexture(*(xg::Guid*)guid);
+	lua_pushlightuserdata(state, &res);
 	return 0;
 }
 
@@ -337,5 +453,39 @@ int DebugDrawer_text(lua_State* state)
 	lua_Integer y = luaL_checkinteger(state, 4);
 	s_DebugDrawer->text(text, color, x, y);
 	return 0;
+}
+
+int SGELoader_createSGE(lua_State* state)
+{
+	ASSERT(s_SGELoader != NULL, "s_SGELoader is nullptr!", 0);
+	const char* file = luaL_checkstring(state, 1);
+	sgeElement* res = s_SGELoader->createSGE(file);
+	lua_pushlightuserdata(state, &res);
+	return 0;
+}
+
+int SGELoader_deleteSGE(lua_State* state)
+{
+	ASSERT(s_RenderResources != NULL, "s_SGELoader is nullptr!", 0);
+	if (!lua_islightuserdata(state, 1))
+		return 0;
+	void* sge = lua_touserdata(state, 1);
+	s_SGELoader->deleteSGE((sgeElement*)sge);
+	return 0;
+}
+
+int TimeHandler_retimeDelta(lua_State* state)
+{
+	ASSERT(s_TimeHandler != NULL, "s_TimeHandler is nullptr!", 0);
+	s_TimeHandler->retimeDelta();
+	return 0;
+}
+
+int TimeHandler_delta(lua_State* state)
+{
+	ASSERT(s_TimeHandler != NULL, "s_TimeHandler is nullptr!", 0);
+	double delta = s_TimeHandler->delta();
+	lua_pushnumber(state, delta);
+	return 1;
 }
 #pragma endregion
