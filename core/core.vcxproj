@@ -164,18 +164,18 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)fpng</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>guidd.lib;lua51d.lib;luajitd.lib;SDL3.lib;%(AdditionalDependencies);gladd.lib</AdditionalDependencies>
+      <AdditionalDependencies>guidd.lib;SDL3.lib;%(AdditionalDependencies);gladd.lib;freetype.lib;zlibstatic.lib;fpngd.lib</AdditionalDependencies>
       <Version>
       </Version>
       <AdditionalLibraryDirectories>$(SolutionDir)lib;$(SolutionDir)$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
@@ -193,11 +193,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)fpng</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -206,7 +206,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>guidd.lib;lua51d.lib;luajitd.lib;SDL3.lib;%(AdditionalDependencies);gladd.lib</AdditionalDependencies>
+      <AdditionalDependencies>guidd.lib;SDL3.lib;%(AdditionalDependencies);gladd.lib;freetype.lib;zlibstatic.lib;fpngd.lib</AdditionalDependencies>
       <Version>
       </Version>
       <AdditionalLibraryDirectories>$(SolutionDir)lib;$(SolutionDir)$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
@@ -224,11 +224,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;SGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)fpng</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -237,7 +237,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>guid.lib;lua51.lib;luajit.lib;SDL3.lib;%(AdditionalDependencies);glad.lib</AdditionalDependencies>
+      <AdditionalDependencies>guid.lib;SDL3.lib;%(AdditionalDependencies);glad.lib;freetype.lib;zlibstatic.lib;fpng.lib</AdditionalDependencies>
       <Version>
       </Version>
       <AdditionalLibraryDirectories>$(SolutionDir)lib;$(SolutionDir)$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
@@ -250,33 +250,31 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ArialFont.h" />
-    <ClInclude Include="DebugDrawer.h" />
-    <ClInclude Include="DebugLogger.h" />
-    <ClInclude Include="Engine.h" />
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="AssetHandler.h" />
+    <ClInclude Include="CompressionUtility.h" />
+    <ClInclude Include="DebugMessenger.h" />
     <ClInclude Include="EventHandler.h" />
-    <ClInclude Include="exports.h" />
+    <ClInclude Include="FileHandler.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="globals.h" />
     <ClInclude Include="LuaHandler.h" />
+    <ClInclude Include="MemoryUtilities.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="DataParser.h" />
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="RenderResources.h" />
-    <ClInclude Include="resdata\res_credits_txt.h" />
-    <ClInclude Include="resdata\res_lua_boot_lua.h" />
-    <ClInclude Include="resdata\res_shaders_2d_rect_frag.h" />
-    <ClInclude Include="resdata\res_shaders_2d_rect_vert.h" />
-    <ClInclude Include="resdata\res_shaders_debug_font_frag.h" />
-    <ClInclude Include="resdata\res_shaders_debug_font_vert.h" />
-    <ClInclude Include="SGELoader.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="TimeHandler.h" />
+    <ClInclude Include="StringUtility.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DebugDrawer.cpp" />
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="AssetHandler.cpp" />
+    <ClCompile Include="CompressionUtility.cpp" />
+    <ClCompile Include="DebugMessenger.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Engine.cpp" />
     <ClCompile Include="EventHandler.cpp" />
+    <ClCompile Include="FileHandler.cpp" />
     <ClCompile Include="LuaHandler.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -286,11 +284,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="DataParser.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="RenderResources.cpp" />
-    <ClCompile Include="SGELoader.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="TimeHandler.cpp" />
+    <ClCompile Include="StringUtility.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

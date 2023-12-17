@@ -1,33 +1,30 @@
 #pragma once
 
+#include <string>
+#include <memory>
+#include <type_traits>
+#include <tuple>
+#include <iostream>
+
 struct lua_State;
-class Window;
+
+class AssetHandler;
+class DataElement;
 class Renderer;
-class RenderResources;
-class CommandList;
-class DebugDrawer;
-class SGELoader;
-class TimeHandler;
 
 class LuaHandler {
 private:
 	lua_State* m_State;
 
-	void registerMetaTables();
+	void StartTable();
+	void PushEnum(std::string name, int value);
+	void PushTable(std::string name);
 public:
-	LuaHandler(const char* def);
+	LuaHandler(std::weak_ptr<DataElement> config, std::weak_ptr<AssetHandler> assetHandler, std::weak_ptr<Renderer> renderer);
 	~LuaHandler();
-	
-	void bindWindow(Window* window);
-	void bindRenderer(Renderer* renderer);
-	void bindRenderResources(RenderResources* rres);
-	void bindDebugDrawer(DebugDrawer* ddraw);
-	void bindSGELoader(SGELoader* loader);
-	void bindTimeHandler(TimeHandler* time);
 
-	void bindGlobal();
+	void DumpStack();
 
-	void open(const char* file);
-	void run(const char* src);
-	void call(const char* func);
+	void Call(std::string& source);
+	void Invoke(std::string function);
 };

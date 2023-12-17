@@ -1,2 +1,30 @@
-updateThread=0
-updateThrFreq=0
+config: {
+    calls: {
+        loadfunc: "OnLoad"
+        exitfunc: "OnExit"
+        updatefunc: "OnUpdate"
+        renderfunc: "OnRender"
+
+        updateThread: {
+            enabled: 1
+            frequency: 0.0333333333333333
+        }
+    }
+    rendering: {
+        vsync: 0
+        frequency: 0.0333333333333333
+    }
+    window: {
+        width: 1080
+        height: 720
+        title: "Factory"
+        resizable: 0
+    }
+    resources: {
+        threaded: 0
+        threads: 2
+    }
+    scripting: {
+        
+    }
+}

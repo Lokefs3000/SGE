@@ -1,18 +1,14 @@
 #include "pch.h"
 #include "Window.h"
 
-#include <sdl3/SDL.h>
+#include <SDL3/SDL.h>
 
-Window::Window()
+#include "DataParser.h"
+
+Window::Window(std::shared_ptr<DataElement> data)
 {
-	m_Window = SDL_CreateWindow("Untitled", 800, 600, SDL_WINDOW_OPENGL);
-
-	m_Width = 800;
-	m_Height = 600;
-
-	m_WindowId = SDL_GetWindowID(m_Window);
-
-	m_Closed = false;
+	std::shared_ptr<DataElement> winConf = data->GetChild("config")->GetChild("window");
+	m_Window = SDL_CreateWindow(winConf->GetValue("title").ValString.c_str(), winConf->GetValue("width").ValInt, winConf->GetValue("height").ValInt, SDL_WINDOW_OPENGL);
 }
 
 Window::~Window()
@@ -20,48 +16,12 @@ Window::~Window()
 	SDL_DestroyWindow(m_Window);
 }
 
-void Window::setTitle(char* title)
-{
-	SDL_SetWindowTitle(m_Window, title);
-}
-
-void Window::setWidth(int width)
-{
-	SDL_SetWindowSize(m_Window, width, m_Height);
-	m_Width = width;
-}
-
-void Window::setHeight(int height)
-{
-	SDL_SetWindowSize(m_Window, m_Width, height);
-	m_Height = height;
-}
-
-void Window::swapWindow()
+void Window::PerformBufferSwap()
 {
 	SDL_GL_SwapWindow(m_Window);
 }
 
-void Window::eventProc(SDL_Event& Event)
-{
-	if (Event.window.windowID == m_WindowId) {
-		switch (Event.type)
-		{
-		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-			m_Closed = true;
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-bool Window::isClosed()
-{
-	return m_Closed;
-}
-
-SDL_Window* Window::getWindow()
+SDL_Window* Window::GetInternalWindow()
 {
 	return m_Window;
 }

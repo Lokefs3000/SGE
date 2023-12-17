@@ -1,0 +1,30 @@
+config: {
+    calls: {
+        loadfunc: "OnLoad"
+        exitfunc: "OnExit"
+        updatefunc: "OnUpdate"
+        renderfunc: "OnRender"
+
+        updateThread: {
+            enabled: 0
+            frequency: 0.0166666666666667
+        }
+    }
+    renderer: {
+        vsync: 0
+        frequency: 0.0166666666666667
+    }
+    window: {
+        width: 1080
+        height: 720
+        title: "Golf"
+        resizable: 0
+    }
+    resources: {
+        threaded: 0
+        threads: 2
+    }
+    scripting: {
+        
+    }
+}

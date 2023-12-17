@@ -1,14 +1,16 @@
 #pragma once
 
+#include "globals.h"
+
 #include <functional>
 
 union SDL_Event;
 
 class EventHandler {
 private:
-	std::vector<std::function<void(SDL_Event&)>> m_Handlers;
+	std::vector<std::function<void(SDL_Event&)>> m_Attachments;
 public:
-	void bind(std::function<void(SDL_Event&)> handler);
+	void HandleEvents();
 
-	void process();
+	void Attach(std::function<void(SDL_Event&)> func);
 };

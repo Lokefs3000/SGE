@@ -1,0 +1,27 @@
+config: {
+    calls: {
+        loadfunc: "OnLoad"
+        exitfunc: "OnExit"
+        updatefunc: "OnUpdate"
+        renderfunc: "OnRender"
+
+        updateThread: {
+            enabled: 0
+            frequency: 0.0166666666666667
+        }
+    }
+    renderer: {
+        vsync: 1
+        frequency: 0
+    }
+    window: {
+        width: 1080
+        height: 720
+        title: "Default"
+        resizable: 0
+    }
+    resources: {
+        threaded: 0
+        threads: 2
+    }
+}

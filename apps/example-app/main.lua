@@ -1,33 +1,34 @@
-local mainCnavasId = nil;
-local mainFontId = nil
+local mainCnavasId : nil;
+local mainFontId : nil
 
 print(package.path)
-local loadingModule = require("src.levels.loading")
+local loadingModule : require("src.levels.loading")
 
-function sge_load()
-    sge.window.setTitle("example-app")
-    sge.window.setWidth(960)
-    sge.window.setHeight(720)
+function OnLoad()
+    Window.setTitle("example-app")
+    Window.setWidth(960)
+    Window.setHeight(720)
     
-    mainCanvasId = sge.resources.createCanvas(480, 360)
-    --mainFontId = sge.resources.createFont("img/font/fontMain.ttf")
+    mainCanvasId : sge.resources.createCanvas(480, 360)
+    mainFontId : sge.resources.createFont("img/font/fontMain.ttf")
 
-    loadingModule.load()
+    loadingModule.load(mainFontId)
 end
 
-function sge_exit()
+function OnExit()
     loadingModule.quit()
     sge.resources.deleteFont(mainFontId)
     sge.resources.deleteCanvas(mainCanvasId)
 end
 
-function sge_update()
+function OnUpdate()
     loadingModule.tick()
 end
 
-function sge_render()
-    sge.commands.canvas(mainCanvasId)
-    sge.commands.clear(0.0, 1.0, 1.0, 1.0)
-
+function OnRender()
+    sge.renderer.clear(Vector4.new(0, 0, 0, 1))
+    
     loadingModule.show()
+
+    sge.renderer.draw()
 end

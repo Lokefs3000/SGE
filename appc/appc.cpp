@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "Engine.h"
+#include <Application.h>
 
 int main(int argc, char* argv[])
 {
-    Engine engine(argc, argv);
-    return engine.Run();
+    Application engine;
+    return engine.Run(argv, argc);
 }

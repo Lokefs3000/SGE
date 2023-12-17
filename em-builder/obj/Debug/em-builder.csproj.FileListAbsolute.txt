@@ -1,0 +1,7 @@
+C:\Users\Loke\source\repos\SGE\em-builder\bin\Debug\em-builder.exe.config
+C:\Users\Loke\source\repos\SGE\em-builder\bin\Debug\em-builder.exe
+C:\Users\Loke\source\repos\SGE\em-builder\bin\Debug\em-builder.pdb
+C:\Users\Loke\source\repos\SGE\em-builder\obj\Debug\em-builder.csproj.AssemblyReference.cache
+C:\Users\Loke\source\repos\SGE\em-builder\obj\Debug\em-builder.csproj.CoreCompileInputs.cache
+C:\Users\Loke\source\repos\SGE\em-builder\obj\Debug\em-builder.exe
+C:\Users\Loke\source\repos\SGE\em-builder\obj\Debug\em-builder.pdb

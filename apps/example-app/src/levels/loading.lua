@@ -1,15 +1,14 @@
-local loading = {}
+local loading : {}
 
-loading.data = {}
-loading.data.atlas = nil
-loading.data.atlasData = nil
-loading.data.font = nil
+loading.data : {}
+loading.data.atlas : nil
+loading.data.atlasData : nil
+loading.data.font : nil
 
-function loading.load()
-    loading.data.atlas = sge.resources.createTexture("img/ui/loadingAtlas.png")
-    loading.data.atlasData = sge.loader.createSGE("data/ui/loadingAtlas.sge")
-    print(loading.data.atlasData)
-    loading.data.font = sge.resources.getFont("img/font/fontMain.ttf")
+function loading.load(font)
+    loading.data.atlas : sge.resources.createTexture("img/ui/loadingAtlas.png")
+    loading.data.atlasData : sge.loader.createSGE("data/ui/loadingAtlas.sge")
+    loading.data.font : font
 end
 
 function loading.quit()
@@ -18,11 +17,9 @@ function loading.quit()
 end
 
 function loading.show()
-    sge.commands.texture(loading.data.atlas)
-    sge.commands.atlas(loading.data.atlasData, "foreground")
-    sge.commands.rectAtlas(0, 0, 76, 7)
+    sge.renderer.drawRect(Vector4.new(1, 1, 1, 1), -152, -14, 304, 28)
 
-    sge.debug.text("loading ??/?? (?%)", 0xffffff, 0, 0)
+    sge.debug.text("loading ??/?? (?%)", 0xffffff, 0, -100)
 end
 
 function loading.tick()

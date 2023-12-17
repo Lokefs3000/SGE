@@ -22,7 +22,6 @@ namespace res_embed
             for (int i = 0; i < files.Length; i++)
             {
                 string data = LoadFile(files[i]);
-                Console.WriteLine(files[i].LastIndexOf("."));
                 output = "#pragma once\n\nstatic const char* res" + files[i].Replace('\\', '_').Replace('.', '_').Substring(dir.Length) + " =\n" + data;
                 File.WriteAllText(outdir + "\\res" + files[i].Replace('\\', '_').Replace('.', '_').Substring(dir.Length) + ".h", output);
             }
@@ -39,7 +38,7 @@ namespace res_embed
             {
                 if (lines[i].Length > 0)
                 {
-                    data += "      " + '"' + lines[i] + "\\n" + '"' + "\n";
+                    data += "      " + '"' + lines[i].Replace("\"", "\\\"") + "\\n" + '"' + "\n";
                 }
             }
 
