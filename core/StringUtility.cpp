@@ -48,3 +48,16 @@ std::string StringUtility::TrimChar(std::string source, unsigned char ch)
 
     return source;
 }
+
+std::string StringUtility::Replace(std::string source, std::string from, std::string to)
+{
+    if (from.empty())
+        return source;
+    size_t start_pos = 0;
+    while ((start_pos = source.find(from, start_pos)) != std::string::npos) {
+        source.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+
+    return source;
+}

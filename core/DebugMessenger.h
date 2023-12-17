@@ -16,6 +16,8 @@ public:
 	static void TemplatedArgLog(const char* func, uint32_t line, uint8_t sev, Args ...args);
 	
 	static void PrintStringSeverity(std::string message, uint8_t severity);
+
+	static void SetupDebugMessaging();
 };
 
 #define DebugInfo(...) DebugMessenger::TemplatedArgLog(__FUNCTION__, __LINE__, 0, __VA_ARGS__);

@@ -12,6 +12,8 @@
 
 #include <iostream>
 
+#include <glad/gl.h>
+
 const char* DebugMessenger::warnNames[] = {
 	"Info",
 	"Warn",
@@ -64,4 +66,82 @@ void DebugMessenger::PrintStringSeverity(std::string message, uint8_t severity)
 		break;
 	}
 #endif
+}
+
+void DebugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+
+void DebugMessenger::SetupDebugMessaging()
+{
+#ifdef __EMSCRIPTEN__
+	DebugWarning("Debug output requested but not available in WebGL!");
+#else
+	glDebugMessageCallbackARB(DebugCallbackARB, NULL);
+#endif // __EMSCRIPTEN__
+}
+
+void DebugCallbackARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+{
+	if (severity != GL_DEBUG_SEVERITY_LOW_ARB) {
+		std::string source_str;
+
+		switch (source)
+		{
+		case GL_DEBUG_SOURCE_API_ARB:
+			source_str = "OpenGL";
+			break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:
+			source_str = "OpenGL";
+			break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:
+			source_str = "ShaderC";
+			break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:
+			source_str = "TrdParty";
+			break;
+		case GL_DEBUG_SOURCE_APPLICATION_ARB:
+			source_str = "App";
+			break;
+		case GL_DEBUG_SOURCE_OTHER_ARB:
+		default:
+			source_str = "Other";
+			break;
+		}
+
+		std::string type_str;
+
+		switch (type)
+		{
+		case GL_DEBUG_TYPE_ERROR_ARB:
+			type_str = "Error";
+			break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+			type_str = "Depracted";
+			break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+			type_str = "UndefBehavior";
+			break;
+		case GL_DEBUG_TYPE_PORTABILITY_ARB:
+			type_str = "Portability";
+			break;
+		case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+			type_str = "Performance";
+			break;
+		case GL_DEBUG_TYPE_OTHER_ARB:
+		default:
+			type_str = "Other";
+			break;
+		}
+
+		switch (severity)
+		{
+		case GL_DEBUG_SEVERITY_MEDIUM_ARB:
+			DebugWarning("\"", source_str, "\" generated an warning message with type: \"", type_str, "\", message: ", message);
+			break;
+		case GL_DEBUG_SEVERITY_HIGH_ARB:
+			DebugError("\"", source_str, "\" generated an error message with type: \"", type_str, "\", message: ", message);
+			break;
+		default:
+			break;
+		}
+	}
 }

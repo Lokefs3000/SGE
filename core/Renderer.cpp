@@ -3,10 +3,23 @@
 
 #include <SDL3/SDL.h>
 #include <glad/gl.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "DataParser.h"
 #include "Window.h"
 #include "Texture.h"
+#include "Shader.h"
+#include "DebugMessenger.h"
+
+#include "resdata/res_shaders_spriteSv_glsl.h"
+#include "resdata/res_shaders_spriteSf_glsl.h"
+
+void Renderer::RestructureShaderUniforms()
+{
+	m_Shader[0]->Bind();
+	m_Shader[0]->SetMatrix4("uProjection", m_Projection);
+	m_Shader[0]->SetInt("uTexture", 0);
+}
 
 RenderMode& Renderer::ChangeMode(uint8_t mode, bool compareExtra)
 {
@@ -65,8 +78,21 @@ Renderer::Renderer(std::weak_ptr<Window> window, std::shared_ptr<DataElement> da
 	SDL_GL_MakeCurrent(lock->GetInternalWindow(), m_OpenGL);
 	gladLoadGL(SDL_GL_GetProcAddress);
 
+#ifndef NDEBUG
+	DebugMessenger::SetupDebugMessaging();
+#endif
+
 	std::shared_ptr<DataElement> rendConf = data->GetChild("config")->GetChild("renderer");
 	SDL_GL_SetSwapInterval(rendConf->GetValue("vsync").ValInt);
+
+	m_Shader.resize(1);
+	m_Shader[0] = std::make_unique<Shader>(res_shaders_spriteSv_glsl, res_shaders_spriteSf_glsl);
+
+	int w, h;
+	SDL_GetWindowSizeInPixels(lock->GetInternalWindow(), &w, &h);
+	m_Projection = glm::ortho(
+		-w / 2.0f, w / 2.0f,
+		-h / 2.0f, h / 2.0f);
 
 	glGenVertexArrays(1, &m_MainVertexArray);
 	glGenBuffers(1, &m_MainVertexBuffer);
@@ -81,6 +107,11 @@ Renderer::Renderer(std::weak_ptr<Window> window, std::shared_ptr<DataElement> da
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(RenderVertex), (void*)offsetof(RenderVertex, Colors));
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	RestructureShaderUniforms();
 }
 
 Renderer::~Renderer()
@@ -88,13 +119,27 @@ Renderer::~Renderer()
 	glDeleteVertexArrays(1, &m_MainVertexArray);
 	glDeleteBuffers(1, &m_MainVertexBuffer);
 
+	m_Shader.clear();
+
 	gladLoaderUnloadGL();
 	SDL_GL_DeleteContext(m_OpenGL);
 }
 
+void Renderer::HandleEvent(SDL_Event& Event)
+{
+	if (Event.type == SDL_EVENT_WINDOW_RESIZED) {
+		m_Projection = glm::ortho(
+			-Event.window.data1 / 2.0f, Event.window.data1 / 2.0f,
+			-Event.window.data2 / 2.0f, Event.window.data2 / 2.0f);
+		glViewport(0, 0, Event.window.data1, Event.window.data2);
+
+		RestructureShaderUniforms();
+	}
+}
+
 void Renderer::DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec4 color, Texture* texture)
 {
-	RenderMode& mode = ChangeMode(0, (m_Modes.size() > 0 && m_Modes.end()._Ptr->Tex == texture));
+	RenderMode& mode = ChangeMode(0, (m_Modes.size() > 0 && m_Modes[m_Modes.size() - 1].Tex == texture));
 	mode.Tex = texture;
 	AddRectToChunk(pos, size, color);
 }
@@ -118,9 +163,14 @@ void Renderer::EndFrame()
 		RenderChunk& chunk = m_Chunks[mode.Chunk];
 
 		if (mode.Chunk != activeChunk) {
-			void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-			memcpy(ptr, chunk.Vertices.data(), chunk.At);
+#ifdef __EMSCRIPTEN__
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RenderVertex) * chunk.At, chunk.Vertices.data());
+#else
+			void* ptr = glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(RenderVertex) * chunk.At, GL_MAP_WRITE_BIT);
+			memcpy(ptr, chunk.Vertices.data(), sizeof(RenderVertex) * chunk.At);
 			glUnmapBuffer(GL_ARRAY_BUFFER);
+#endif
+
 
 			activeChunk = mode.Chunk;
 		}
@@ -142,6 +192,8 @@ void Renderer::EndFrame()
 		default:
 			break;
 		}
+
+		m_Shader[mode.Mode]->Bind();
 
 		glDrawArrays(GL_TRIANGLES, mode.Start, count);
 	}

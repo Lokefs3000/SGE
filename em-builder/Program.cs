@@ -34,7 +34,7 @@ namespace em_builder
 
             for (int i = 0; i < input.Count; i++)
             {
-                string cmd = "@call emcc " + Path.GetFullPath(input[i]) + " " + libCmd + " -c -o " + Path.Combine(Path.GetFullPath(inter), Path.GetFileNameWithoutExtension(input[i])) + ".o -O" + optimize + " " + incCmd;
+                string cmd = "@call emcc " + Path.GetFullPath(input[i]) + " " + libCmd + " -c -o " + Path.Combine(Path.GetFullPath(inter), Path.GetFileNameWithoutExtension(input[i])) + ".o -O" + optimize + " " + incCmd + "  -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2  ";
                 if (debug)
                 {
                     cmd += "-sDEMANGLE_SUPPORT=1 -g" + size;
@@ -81,7 +81,7 @@ namespace em_builder
                 compileCmd += "set EMCC_DEBUG=1\n";
             }
 
-            compileCmd += "@call emcc -O" + optimize + " -g" + size + " ";
+            compileCmd += "@call emcc -O" + optimize + " -g" + size + " -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 ";
 
             for (int i = 0; i < input.Count; i++)
             {

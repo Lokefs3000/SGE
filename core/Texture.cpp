@@ -15,7 +15,7 @@ Texture::Texture(unsigned char* source, int width, int height, Filtering filteri
 	glBindTexture(GL_TEXTURE_2D, m_TextureId);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)filtering);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)filtering);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)filtering);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)repeating);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)repeating);

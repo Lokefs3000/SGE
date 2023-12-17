@@ -1,2 +1,4 @@
-Replace "glTexSubImage2D" with "glMapBuffer" in font atlas loader.
-    -Possibly optimize atlas generation to use height
+- Optimize renderer batching system.
+- Switch to using UBOs for shader data.
+- Rework asset embedding system to use a class instead.
+- Confirm compatibility with glMapBufferRange in WebGL2.

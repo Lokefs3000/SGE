@@ -263,6 +263,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="DataParser.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="StringUtility.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Window.h" />
@@ -286,6 +287,7 @@
     </ClCompile>
     <ClCompile Include="DataParser.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StringUtility.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Window.cpp" />
